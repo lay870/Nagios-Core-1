@@ -1,5 +1,5 @@
 #!/bin/sh
-# INstall Prerquisite
+# Install Prerquisite
 yum install httpd php php-cli gcc glibc glibc-common gd gd-devel openssl openssl-devel perl net-snmp wget net-tools -y
 # User & Groups
 useradd nagios
@@ -28,7 +28,7 @@ htpasswd -c /usr/local/nagios/etc/htpasswd.users nagiosadmin
 cd /usr/local/src/
 wget http://nagios-plugins.org/download/nagios-plugins-2.0.tar.gz
 tar zxvf nagios-plugins-2.0.tar.gz
-cd /tmp/nagios-plugins-2.0
+cd nagios-plugins-2.0
 ./configure --with-nagios-user=nagios --with-nagios-group=nagios
 make
 make install
