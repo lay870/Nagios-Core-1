@@ -1,0 +1,55 @@
+#!/bin/sh
+# INstall Prerquisite
+yum install httpd php php-cli gcc glibc glibc-common gd gd-devel openssl openssl-devel perl net-snmp wget net-tools -y
+# User & Groups
+useradd nagios
+groupadd nagcmd
+usermod -a -G nagcmd nagios
+usermod -a -G nagcmd apache
+# Install Nagios
+cd /usr/local/src/
+wget http://sourceforge.net/projects/nagios/files/nagios-4.x/nagios-4.1.1/nagios-4.1.1.tar.gz
+#wget http://prdownloads.sourceforge.net/sourceforge/nagios/nagios-4.0.4.tar.gz
+tar -zxvf nagios-4.1.1.tar.gz
+cd nagios-4.1.1
+./configure --with-command-group=nagcmd
+make all
+make install
+make install-init
+make install-config
+make install-commandmode
+make install-webconf
+cp -R contrib/eventhandlers/ /usr/local/nagios/libexec/
+chown -R nagios:nagios /usr/local/nagios/libexec/eventhandlers
+/usr/local/nagios/bin/nagios -v /usr/local/nagios/etc/nagios.cfg
+# Setup Nagios Admin Password
+htpasswd -c /usr/local/nagios/etc/htpasswd.users nagiosadmin
+# Install Nagios Plugins
+cd /usr/local/src/
+wget http://nagios-plugins.org/download/nagios-plugins-2.0.tar.gz
+tar zxvf nagios-plugins-2.0.tar.gz
+cd /tmp/nagios-plugins-2.0
+./configure --with-nagios-user=nagios --with-nagios-group=nagios
+make
+make install
+# Enable httpd & Nagios
+systemctl enable nagios
+systemctl  start httpd
+systemctl  status -l httpd
+# Install NRPE
+yum install xinetd
+cd /usr/local/src/
+wget http://garr.dl.sourceforge.net/project/nagios/nrpe-2.x/nrpe-2.15/nrpe-2.15.tar.gz
+tar zxvf nrpe-2.15.tar.gz
+cd nrpe-2.15
+#/configure --with-nagios-user=nagios --with-nagios-group=nagios --prefix=/usr/local
+./configure --enable-command-args --with-nagios-user=nagios --with-nagios-group=nagios --with-ssl=/usr/bin/openssl --with-ssl-lib=/usr/lib/x86_64-linux-gnu
+make all
+make install
+make install-xinetd
+make install-daemon-config
+# Enable & restart nrpe
+systemctl enable xinetd
+systemctl restart xinetd
+systemctl status -l  xinetd
+
